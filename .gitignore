@@ -1,0 +1,30 @@
+# .NET
+backend/src/*/bin/
+backend/src/*/obj/
+backend/build_output.txt
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Docker
+.env
+
+# Sensitive
+*.pfx
+*.pem

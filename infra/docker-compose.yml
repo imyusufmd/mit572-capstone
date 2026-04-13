@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # .NET Web API (Backend)
+  # ============================================================
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: warehouse-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__PostgreSQL=Host=${POSTGRES_HOST:-10.0.2.4};Port=5432;Database=warehouse;Username=app_user;Password=${POSTGRES_PASSWORD:-Warehouse@2026!}
+      - ConnectionStrings__SqlServer=Server=sqlserver;Database=WarehouseDW;User=sa;Password=${SA_PASSWORD:-Warehouse@DW2026!};TrustServerCertificate=True
+      - Jwt__Key=${JWT_KEY:-WarehouseCapstone2026SecureSigningKeyAtLeast32Characters!}
+      - Jwt__Issuer=WarehouseAPI
+      - Jwt__Audience=WarehouseApp
+      - AD__Server=${AD_SERVER:-}
+      - AD__Domain=${AD_DOMAIN:-capstone.local}
+      - Cors__Origins__0=http://localhost
+      - Cors__Origins__1=http://${PUBLIC_IP:-localhost}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - warehouse-net
+
+  # ============================================================
+  # React Frontend (Nginx)
+  # ============================================================
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: warehouse-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - warehouse-net
+
+  # ============================================================
+  # SQL Server (Data Warehouse)
+  # ============================================================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: warehouse-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${SA_PASSWORD:-Warehouse@DW2026!}
+      - MSSQL_PID=Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "${SA_PASSWORD:-Warehouse@DW2026!}" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - warehouse-net
+
+  # ============================================================
+  # Node-RED (ETL Pipeline)
+  # ============================================================
+  nodered:
+    image: nodered/node-red:latest
+    container_name: warehouse-nodered
+    ports:
+      - "1880:1880"
+    volumes:
+      - nodered-data:/data
+      - ../etl:/etl:ro
+    environment:
+      - TZ=America/Chicago
+    restart: unless-stopped
+    networks:
+      - warehouse-net
+
+volumes:
+  sqlserver-data:
+    driver: local
+  nodered-data:
+    driver: local
+
+networks:
+  warehouse-net:
+    driver: bridge
