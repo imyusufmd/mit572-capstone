@@ -28,3 +28,6 @@ desktop.ini
 # Sensitive
 *.pfx
 *.pem
+
+# Claude Code internals
+.claude/
