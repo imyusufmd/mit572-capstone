@@ -28,34 +28,45 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiError), 401)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        // Authenticate via LDAP (or dev mode)
-        if (!_ldap.Authenticate(request.Username, request.Password))
+        try
         {
-            return Unauthorized(new ApiError("Invalid username or password"));
-        }
+            _logger.LogInformation("Login attempt for user: {Username} (auth impl: {Impl})",
+                request.Username, _ldap.GetType().Name);
 
-        // Find or create user record
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-        if (user is null)
-        {
-            // Auto-provision user on first login
-            user = new Models.User
+            if (!_ldap.Authenticate(request.Username, request.Password))
             {
-                Username = request.Username,
-                Email = $"{request.Username}@capstone.local",
-                FullName = request.Username, // Will be updated from AD later
-                Role = "Staff",
-                AdUsername = request.Username
-            };
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();
-            _logger.LogInformation("Auto-provisioned new user: {Username}", request.Username);
+                _logger.LogWarning("Auth rejected for user: {Username}", request.Username);
+                return Unauthorized(new ApiError("Invalid username or password"));
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+            if (user is null)
+            {
+                user = new Models.User
+                {
+                    Username = request.Username,
+                    Email = $"{request.Username}@capstone.local",
+                    FullName = request.Username,
+                    Role = "Staff",
+                    AdUsername = request.Username
+                };
+                _db.Users.Add(user);
+                await _db.SaveChangesAsync();
+                _logger.LogInformation("Auto-provisioned new user: {Username}", request.Username);
+            }
+
+            var token = _jwt.GenerateToken(user.Username, user.FullName, user.Role);
+            var expiresAt = DateTime.UtcNow.AddHours(8);
+
+            _logger.LogInformation("Login succeeded for user: {Username}", request.Username);
+            return Ok(new LoginResponse(token, user.Username, user.FullName, user.Role, expiresAt));
         }
-
-        var token = _jwt.GenerateToken(user.Username, user.FullName, user.Role);
-        var expiresAt = DateTime.UtcNow.AddHours(8);
-
-        return Ok(new LoginResponse(token, user.Username, user.FullName, user.Role, expiresAt));
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Login crashed for user: {Username}. Type: {Type}. Inner: {Inner}",
+                request.Username, ex.GetType().FullName, ex.InnerException?.Message);
+            return StatusCode(500, new ApiError($"Login error: {ex.GetType().Name}: {ex.Message}"));
+        }
     }
 
     [HttpGet("status")]

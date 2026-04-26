@@ -95,5 +95,6 @@ public class DevAuthService : ILdapService
         return !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password);
     }
 
-    public bool IsAvailable() => true;
+    // Returns false so /auth/status reports the real auth mode (Development) instead of "Active Directory".
+    public bool IsAvailable() => false;
 }

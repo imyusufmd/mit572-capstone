@@ -68,13 +68,17 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IJwtService, JwtService>();
 
-// Use LDAP auth if AD server is configured, otherwise use dev auth
-if (!string.IsNullOrEmpty(builder.Configuration["AD:Server"]))
+// Use LDAP auth if AD server is configured, otherwise use dev auth.
+// Use IsNullOrWhiteSpace so a value like " " from env doesn't accidentally enable LDAP.
+var adServer = builder.Configuration["AD:Server"]?.Trim();
+if (!string.IsNullOrWhiteSpace(adServer))
 {
+    Console.WriteLine($"[startup] Auth mode: Active Directory (server={adServer})");
     builder.Services.AddSingleton<ILdapService, LdapService>();
 }
 else
 {
+    Console.WriteLine("[startup] Auth mode: Development (no AD configured)");
     builder.Services.AddSingleton<ILdapService, DevAuthService>();
 }
 
