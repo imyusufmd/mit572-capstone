@@ -13,7 +13,7 @@ services:
       - "5000:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__PostgreSQL=Host=${POSTGRES_HOST:-10.0.2.4};Port=5432;Database=warehouse;Username=app_user;Password=${POSTGRES_PASSWORD:-Warehouse@2026!}
+      - ConnectionStrings__PostgreSQL=Host=${POSTGRES_HOST:-10.0.1.5};Port=5432;Database=warehouse;Username=app_user;Password=${POSTGRES_PASSWORD:-Warehouse@2026!}
       - ConnectionStrings__SqlServer=Server=sqlserver;Database=WarehouseDW;User=sa;Password=${SA_PASSWORD:-Warehouse@DW2026!};TrustServerCertificate=True
       - Jwt__Key=${JWT_KEY:-WarehouseCapstone2026SecureSigningKeyAtLeast32Characters!}
       - Jwt__Issuer=WarehouseAPI

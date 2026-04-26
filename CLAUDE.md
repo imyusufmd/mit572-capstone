@@ -100,13 +100,61 @@
 
 ---
 
+### Session 2 — 2026-04-17
+
+**Status**: Frontend Batch 1 COMPLETE (Login + Dashboard)
+
+**Completed**:
+- [x] Scaffolded Vite + React 19 + TypeScript frontend project
+- [x] Installed deps: Tailwind CSS v4, React Router v7, Axios, Recharts, Lucide React
+- [x] Dark theme configured (gray-900/950 backgrounds, blue-500 accent, custom Tailwind theme)
+- [x] Shared components: AuthContext, ApiClient (Axios + JWT interceptor), AppLayout, Sidebar (responsive w/ hamburger), Header, LoadingSpinner, StatusBadge, EmptyState, Toast notifications
+- [x] **Login page** (`/login`) — form with show/hide password, error handling, auto-redirect
+- [x] **Dashboard page** (`/`) — 8 KPI cards (responsive grid), quick actions panel
+- [x] App router with protected routes (redirects to /login if no JWT)
+- [x] All TypeScript types matching backend DTOs
+- [x] **BUILD SUCCEEDED** — 0 errors, 0 warnings (289KB JS / 94KB gzipped)
+
+**npm Packages Installed**:
+- tailwindcss + @tailwindcss/vite
+- react-router-dom
+- axios
+- recharts
+- lucide-react
+
+**Frontend Architecture Decisions**:
+- Dark theme only (no light mode toggle for now)
+- Custom Tailwind components — no UI library (no shadcn, no MUI)
+- Auth via localStorage JWT + Axios interceptor (401 → auto-logout)
+- AppLayout wraps all authenticated routes; Login is standalone
+- Sidebar nav has all 11 pages pre-wired (pages built incrementally per batch)
+
+**Next Steps**:
+- Batch 2: Products List + Product Detail pages
+- Remaining batches: Inventory, Zones, Suppliers, Shipments, Orders, Analytics, Categories, Alerts, Settings
+- Shared components still needed: DataTable, Modal, FormField, PageHeader (will build as needed in future batches)
+
+**Known Issues / Blockers**:
+- None
+
+---
+
 ## Key Files Reference
 
 | File | Purpose |
 |---|---|
 | `backend/src/WarehouseAPI/Program.cs` | API entry point |
 | `backend/src/WarehouseAPI/Data/WarehouseDbContext.cs` | EF Core DbContext |
-| `frontend/src/App.tsx` | React app entry |
+| `frontend/src/App.tsx` | React router setup |
+| `frontend/src/main.tsx` | Frontend entry point |
+| `frontend/src/contexts/AuthContext.tsx` | Auth state (JWT, login/logout) |
+| `frontend/src/api/client.ts` | Axios instance + JWT interceptor |
+| `frontend/src/api/endpoints.ts` | API endpoint functions |
+| `frontend/src/types/index.ts` | TypeScript DTOs (matches backend) |
+| `frontend/src/components/layout/AppLayout.tsx` | Main layout (sidebar + header) |
+| `frontend/src/components/layout/Sidebar.tsx` | Responsive sidebar navigation |
+| `frontend/src/pages/login/LoginPage.tsx` | Login page |
+| `frontend/src/pages/dashboard/DashboardPage.tsx` | Dashboard with KPI cards |
 | `database/postgres-init.sql` | PostgreSQL schema + seed data |
 | `database/sqlserver-warehouse-init.sql` | SQL Server star schema |
 | `infra/docker-compose.yml` | Container orchestration |
