@@ -13,10 +13,14 @@ var builder = WebApplication.CreateBuilder(args);
 // ============================================================
 
 // PostgreSQL — Transactional (OLTP)
-builder.Services.AddDbContext<WarehouseDbContext>(options =>
-    options.UseNpgsql(
-        builder.Configuration.GetConnectionString("PostgreSQL")
-            ?? "Host=localhost;Port=5432;Database=warehouse;Username=app_user;Password=Warehouse@2026!"));
+var pgConn = builder.Configuration.GetConnectionString("PostgreSQL")
+    ?? "Host=localhost;Port=5432;Database=warehouse;Username=app_user;Password=Warehouse@2026!";
+
+// Log the resolved connection (without password) so we can verify env vars are picked up
+var pgConnSanitized = System.Text.RegularExpressions.Regex.Replace(pgConn, @"Password=[^;]*", "Password=***");
+Console.WriteLine($"[startup] PostgreSQL connection: {pgConnSanitized}");
+
+builder.Services.AddDbContext<WarehouseDbContext>(options => options.UseNpgsql(pgConn));
 
 // SQL Server — Data Warehouse (OLAP) — optional, fails gracefully
 var sqlServerConn = builder.Configuration.GetConnectionString("SqlServer");
@@ -140,23 +144,27 @@ app.MapGet("/health", () => Results.Ok(new
 }));
 
 // ============================================================
-// AUTO-MIGRATE DATABASE (Development only)
+// VERIFY DATABASE CONNECTIVITY AT STARTUP (all environments)
 // ============================================================
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<WarehouseDbContext>();
     try
     {
-        // Only auto-apply when using EF migrations
-        // For production, use postgres-init.sql directly
-        await dbContext.Database.EnsureCreatedAsync();
-        app.Logger.LogInformation("Database connection verified successfully.");
+        var canConnect = await dbContext.Database.CanConnectAsync();
+        if (canConnect)
+        {
+            app.Logger.LogInformation("PostgreSQL connection verified successfully.");
+        }
+        else
+        {
+            app.Logger.LogError("PostgreSQL CanConnect returned false. Check POSTGRES_HOST/POSTGRES_PASSWORD env vars.");
+        }
     }
     catch (Exception ex)
     {
-        app.Logger.LogWarning(ex, "Database not available. API will start but DB-dependent endpoints will fail.");
+        app.Logger.LogError(ex, "PostgreSQL connection FAILED at startup. Connection string: {Conn}", pgConnSanitized);
     }
 }
 
