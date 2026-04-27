@@ -139,6 +139,54 @@
 
 ---
 
+### Session 3 — 2026-04-26
+
+**Status**: Azure Infrastructure ALL PHASES COMPLETE (A–F) + Frontend Batch 2 in progress
+
+**Completed**:
+- [x] Created `frontend/Dockerfile` (multi-stage Node 22 build → nginx:1.27-alpine)
+- [x] Created `frontend/nginx.conf` (SPA fallback, `/api/` proxy, `/healthz` local endpoint)
+- [x] Created `frontend/.dockerignore`
+- [x] Created `infra/.env.example` with all required env var documentation
+- [x] Fixed `infra/docker-compose.yml` — corrected POSTGRES_HOST default to `10.0.1.5`; disabled frontend healthcheck
+- [x] Fixed `infra/azure/00-config.sh` — RG renamed to `MIT572-05`; fixed `check_ip()` `set -e` silent exit bug
+- [x] Fixed `infra/azure/01-foundation.sh` — removed `az group create` (MIT572-05 already exists)
+- [x] Fixed `infra/azure/04-vm3-workstation.sh` — updated Windows 11 image to `win11-24h2-ent` (pro SKU unavailable)
+- [x] Fixed `database/postgres-init.sql` — all UUID prefixes corrected to valid hex (z→b, p→d, i→e, o→f, s→1)
+- [x] Fixed `backend/src/WarehouseAPI/Auth/LdapService.cs` — `DevAuthService.IsAvailable()` returns false (fixes /auth/status reporting wrong mode)
+- [x] Fixed `backend/src/WarehouseAPI/Program.cs` — startup logging, auth mode detection with `IsNullOrWhiteSpace`, DB verify in all environments
+- [x] Fixed `backend/src/WarehouseAPI/Controllers/AuthController.cs` — try/catch with full error detail in 500 response
+- [x] Fixed `backend/src/WarehouseAPI/WarehouseAPI.csproj` — Npgsql upgraded from `10.0.0-preview.3` to `10.0.1` (stable, compatible with EF Core 10.0.5 GA)
+- [x] **Phase A** (local prep) ✅
+- [x] **Phase B** (Azure foundation — RG, VNet, NSG) ✅
+- [x] **Phase C** (VM2 — Windows Server + AD DS + PostgreSQL 16 + schema seeded) ✅
+- [x] **Phase A** (local prep) ✅
+- [x] **Phase B** (Azure foundation — RG, VNet, NSG) ✅
+- [x] **Phase C** (VM2 — Windows Server + AD DS + PostgreSQL 16 + schema seeded) ✅
+- [x] **Phase D** (VM1 — Ubuntu + Docker + full stack compose up) ✅ — login works, dashboard shows real DB data
+- [x] **Phase E** (VM3 — SSMS connected to SQL Server on VM1, pgAdmin connected to PostgreSQL on VM2) ✅
+- [x] **Phase F** (VM4 — Grafana + Prometheus running at `http://168.62.51.65:3000`) ✅
+
+**VM IPs (resource group MIT572-05)**:
+- VM1 Ubuntu/Docker: `20.163.216.177` (public), `10.0.1.4` internal — app at `http://20.163.216.177/`
+- VM2 Windows/AD+PG: `40.117.250.121` (public), PostgreSQL on `10.0.1.4:5432`
+- VM3 Windows 11/Workstation: `20.127.116.72` (public) — SSMS + pgAdmin configured
+- VM4 Ubuntu/Monitoring: `168.62.51.65` (public) — Grafana at `:3000`, Prometheus running
+
+**Key Fixes**:
+- `MissingMethodException` on login: `Npgsql 10.0.0-preview.3` called internal EF Core preview API removed in 10.0.5 GA → fixed by upgrading Npgsql to `10.0.1`
+- Auth mode showing "Active Directory" in dev: `DevAuthService.IsAvailable()` was returning true → fixed to false
+- PostgreSQL connection working: `Host=10.0.1.4;Port=5432;Database=warehouse;Username=app_user;Password=Warehouse@2026!`
+
+**Next Steps**:
+- Frontend Batch 2 (in progress on `dev-frontend` branch): Products List ✅, Product Detail ✅, Inventory ✅
+- Frontend remaining: Zones, Suppliers, Categories, Shipments, Orders, Analytics, Alerts, Settings pages + wire all routes in App.tsx
+
+**Known Issues / Blockers**:
+- `libgssapi_krb5.so.2` warning in API container on startup — non-fatal, GSSAPI/Kerberos not needed for password auth
+
+---
+
 ## Key Files Reference
 
 | File | Purpose |
