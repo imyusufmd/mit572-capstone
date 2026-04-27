@@ -76,18 +76,24 @@ services:
   # Node-RED (ETL Pipeline)
   # ============================================================
   nodered:
-    image: nodered/node-red:latest
+    build:
+      context: ../etl
+      dockerfile: Dockerfile
     container_name: warehouse-nodered
     ports:
       - "1880:1880"
     volumes:
       - nodered-data:/data
-      - ../etl:/etl:ro
     environment:
       - TZ=America/Chicago
+      - POSTGRES_HOST=${POSTGRES_HOST:-10.0.1.4}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SA_PASSWORD=${SA_PASSWORD}
     restart: unless-stopped
     networks:
       - warehouse-net
+    depends_on:
+      - sqlserver
 
 volumes:
   sqlserver-data:
