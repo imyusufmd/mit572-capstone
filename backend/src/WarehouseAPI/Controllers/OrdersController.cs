@@ -53,7 +53,7 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            var order = await _orders.UpdateStatusAsync(id, new UpdateOrderStatusRequest { Status = "Cancelled" });
+            var order = await _orders.UpdateStatusAsync(id, new UpdateOrderStatusRequest("Cancelled"));
             return order is null ? NotFound() : Ok(order);
         }
         catch (InvalidOperationException ex)
