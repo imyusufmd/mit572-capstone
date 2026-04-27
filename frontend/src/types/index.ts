@@ -36,12 +36,12 @@ export interface ApiError {
 
 // Products
 export interface ProductDto {
-  id: number;
+  id: string;
   sku: string;
   name: string;
-  description: string;
-  categoryId: number;
-  categoryName: string;
+  description: string | null;
+  categoryId: string | null;
+  categoryName: string | null;
   unitPrice: number;
   weightKg: number | null;
   lengthCm: number | null;
@@ -57,8 +57,8 @@ export interface ProductDto {
 export interface CreateProductRequest {
   sku: string;
   name: string;
-  description: string;
-  categoryId: number;
+  description?: string;
+  categoryId?: string;
   unitPrice: number;
   weightKg?: number;
   lengthCm?: number;
@@ -68,46 +68,46 @@ export interface CreateProductRequest {
 }
 
 export interface UpdateProductRequest {
-  name: string;
-  description: string;
-  categoryId: number;
-  unitPrice: number;
+  name?: string;
+  description?: string;
+  categoryId?: string;
+  unitPrice?: number;
   weightKg?: number;
   lengthCm?: number;
   widthCm?: number;
   heightCm?: number;
   imageUrl?: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 // Categories
 export interface CategoryDto {
-  id: number;
+  id: string;
   name: string;
-  description: string;
+  description: string | null;
   productCount: number;
   createdAt: string;
 }
 
 export interface CreateCategoryRequest {
   name: string;
-  description: string;
+  description?: string;
 }
 
 export interface UpdateCategoryRequest {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
 }
 
 // Warehouse Zones
 export interface WarehouseZoneDto {
-  id: number;
+  id: string;
   name: string;
   zoneType: string;
   capacity: number;
   currentUtilization: number;
   utilizationPercent: number;
-  description: string;
+  description: string | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -116,57 +116,57 @@ export interface CreateZoneRequest {
   name: string;
   zoneType: string;
   capacity: number;
-  description: string;
+  description?: string;
 }
 
 export interface UpdateZoneRequest {
-  name: string;
-  zoneType: string;
-  capacity: number;
-  description: string;
-  isActive: boolean;
+  name?: string;
+  zoneType?: string;
+  capacity?: number;
+  description?: string;
+  isActive?: boolean;
 }
 
 // Inventory
 export interface InventoryDto {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productName: string;
   productSku: string;
-  zoneId: number;
+  zoneId: string;
   zoneName: string;
   quantity: number;
   minThreshold: number;
-  maxThreshold: number;
+  maxThreshold: number | null;
   isLowStock: boolean;
   stockValue: number;
   lastUpdated: string;
 }
 
 export interface StockAdjustmentRequest {
-  productId: number;
-  zoneId: number;
+  productId: string;
+  zoneId: string;
   qtyChange: number;
   reason: string;
-  notes: string;
+  notes?: string;
 }
 
 export interface StockAdjustmentDto {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productName: string;
   productSku: string;
-  zoneId: number;
+  zoneId: string;
   zoneName: string;
   qtyChange: number;
   reason: string;
-  notes: string;
-  adjustedByName: string;
+  notes: string | null;
+  adjustedByName: string | null;
   createdAt: string;
 }
 
 export interface LowStockAlertDto {
-  productId: number;
+  productId: string;
   productName: string;
   productSku: string;
   zoneName: string;
@@ -177,11 +177,11 @@ export interface LowStockAlertDto {
 
 // Suppliers
 export interface SupplierDto {
-  id: number;
+  id: string;
   name: string;
-  contactEmail: string;
-  phone: string;
-  address: string;
+  contactEmail: string | null;
+  phone: string | null;
+  address: string | null;
   rating: number;
   isActive: boolean;
   shipmentCount: number;
@@ -190,94 +190,94 @@ export interface SupplierDto {
 
 export interface CreateSupplierRequest {
   name: string;
-  contactEmail: string;
-  phone: string;
-  address: string;
-  rating: number;
+  contactEmail?: string;
+  phone?: string;
+  address?: string;
+  rating?: number;
 }
 
 export interface UpdateSupplierRequest {
-  name: string;
-  contactEmail: string;
-  phone: string;
-  address: string;
-  rating: number;
-  isActive: boolean;
+  name?: string;
+  contactEmail?: string;
+  phone?: string;
+  address?: string;
+  rating?: number;
+  isActive?: boolean;
 }
 
 // Inbound Shipments
 export interface InboundShipmentItemDto {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productName: string;
   productSku: string;
   expectedQty: number;
   receivedQty: number;
-  zoneId: number;
-  zoneName: string;
-  notes: string;
+  zoneId: string | null;
+  zoneName: string | null;
+  notes: string | null;
 }
 
 export interface InboundShipmentDto {
-  id: number;
+  id: string;
   referenceNumber: string;
-  supplierId: number;
+  supplierId: string;
   supplierName: string;
   expectedDate: string;
   receivedDate: string | null;
   status: string;
-  notes: string;
-  createdByName: string;
+  notes: string | null;
+  createdByName: string | null;
   items: InboundShipmentItemDto[];
   createdAt: string;
 }
 
 export interface CreateShipmentItemRequest {
-  productId: number;
+  productId: string;
   expectedQty: number;
-  zoneId: number;
+  zoneId?: string;
 }
 
 export interface CreateShipmentRequest {
-  supplierId: number;
+  supplierId: string;
   expectedDate: string;
-  notes: string;
+  notes?: string;
   items: CreateShipmentItemRequest[];
 }
 
 export interface ReceiveShipmentItemRequest {
-  itemId: number;
+  itemId: string;
   receivedQty: number;
-  zoneId: number;
+  zoneId?: string;
 }
 
 export interface ReceiveShipmentRequest {
   items: ReceiveShipmentItemRequest[];
-  notes: string;
+  notes?: string;
 }
 
 // Outbound Orders
 export interface OutboundOrderItemDto {
-  id: number;
-  productId: number;
+  id: string;
+  productId: string;
   productName: string;
   productSku: string;
   quantity: number;
-  zoneId: number;
-  zoneName: string;
+  zoneId: string | null;
+  zoneName: string | null;
   pickedAt: string | null;
   packedAt: string | null;
 }
 
 export interface OutboundOrderDto {
-  id: number;
+  id: string;
   orderNumber: string;
   status: string;
   destination: string;
-  customerName: string;
+  customerName: string | null;
   priority: string;
-  notes: string;
-  createdByName: string;
+  notes: string | null;
+  createdByName: string | null;
   items: OutboundOrderItemDto[];
   createdAt: string;
   shippedAt: string | null;
@@ -285,16 +285,16 @@ export interface OutboundOrderDto {
 }
 
 export interface CreateOrderItemRequest {
-  productId: number;
+  productId: string;
   quantity: number;
-  zoneId: number;
+  zoneId?: string;
 }
 
 export interface CreateOrderRequest {
   destination: string;
-  customerName: string;
-  priority: string;
-  notes: string;
+  customerName?: string;
+  priority?: string;
+  notes?: string;
   items: CreateOrderItemRequest[];
 }
 
@@ -322,7 +322,7 @@ export interface StockValueByCategoryDto {
 }
 
 export interface InventoryTurnoverDto {
-  month: number;
+  month: string;
   year: number;
   totalIn: number;
   totalOut: number;
@@ -334,7 +334,7 @@ export interface SupplierPerformanceDto {
   rating: number;
   totalOrders: number;
   totalQuantity: number;
-  avgFulfillmentDays: number;
+  avgFulfillmentDays: number | null;
 }
 
 export interface ZoneUtilizationDto {
@@ -351,7 +351,7 @@ export interface OrderFulfillmentDto {
   orderType: string;
   orderCount: number;
   totalQuantity: number;
-  avgFulfillmentDays: number;
+  avgFulfillmentDays: number | null;
   completedCount: number;
   pendingCount: number;
 }
