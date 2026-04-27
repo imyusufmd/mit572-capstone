@@ -20,9 +20,10 @@ public class InventoryController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
         [FromQuery] Guid? zoneId = null,
-        [FromQuery] bool? lowStockOnly = false)
+        [FromQuery] bool? lowStockOnly = false,
+        [FromQuery] Guid? productId = null)
     {
-        var result = await _inventory.GetAllAsync(page, pageSize, zoneId, lowStockOnly);
+        var result = await _inventory.GetAllAsync(page, pageSize, zoneId, lowStockOnly, productId);
         return Ok(result);
     }
 

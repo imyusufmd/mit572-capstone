@@ -7,7 +7,7 @@ namespace WarehouseAPI.Services;
 
 public interface IInventoryService
 {
-    Task<PagedResult<InventoryDto>> GetAllAsync(int page, int pageSize, Guid? zoneId, bool? lowStockOnly);
+    Task<PagedResult<InventoryDto>> GetAllAsync(int page, int pageSize, Guid? zoneId, bool? lowStockOnly, Guid? productId = null);
     Task<InventoryDto?> GetByIdAsync(Guid id);
     Task<List<LowStockAlertDto>> GetLowStockAlertsAsync();
     Task<StockAdjustmentDto> AdjustStockAsync(StockAdjustmentRequest request, Guid? userId);
@@ -21,7 +21,7 @@ public class InventoryService : IInventoryService
 
     public InventoryService(WarehouseDbContext db) => _db = db;
 
-    public async Task<PagedResult<InventoryDto>> GetAllAsync(int page, int pageSize, Guid? zoneId, bool? lowStockOnly)
+    public async Task<PagedResult<InventoryDto>> GetAllAsync(int page, int pageSize, Guid? zoneId, bool? lowStockOnly, Guid? productId = null)
     {
         var query = _db.Inventory
             .Include(i => i.Product)
@@ -30,6 +30,9 @@ public class InventoryService : IInventoryService
 
         if (zoneId.HasValue)
             query = query.Where(i => i.ZoneId == zoneId.Value);
+
+        if (productId.HasValue)
+            query = query.Where(i => i.ProductId == productId.Value);
 
         if (lowStockOnly == true)
             query = query.Where(i => i.Quantity <= i.MinThreshold);

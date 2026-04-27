@@ -11,6 +11,7 @@ public interface IShipmentService
     Task<InboundShipmentDto?> GetByIdAsync(Guid id);
     Task<InboundShipmentDto> CreateAsync(CreateShipmentRequest request, Guid? userId);
     Task<InboundShipmentDto?> ReceiveAsync(Guid id, ReceiveShipmentRequest request);
+    Task<InboundShipmentDto?> CancelAsync(Guid id);
 }
 
 public class ShipmentService : IShipmentService
@@ -126,6 +127,21 @@ public class ShipmentService : IShipmentService
         if (!string.IsNullOrWhiteSpace(request.Notes))
             shipment.Notes = request.Notes;
 
+        await _db.SaveChangesAsync();
+
+        return await GetByIdAsync(id);
+    }
+
+    public async Task<InboundShipmentDto?> CancelAsync(Guid id)
+    {
+        var shipment = await _db.InboundShipments.FirstOrDefaultAsync(s => s.Id == id);
+        if (shipment is null) return null;
+
+        if (!new[] { "Pending", "In Transit" }.Contains(shipment.Status))
+            throw new InvalidOperationException($"Cannot cancel a shipment in '{shipment.Status}' status.");
+
+        shipment.Status = "Cancelled";
+        shipment.UpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
         return await GetByIdAsync(id);

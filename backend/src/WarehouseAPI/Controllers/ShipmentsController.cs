@@ -53,4 +53,15 @@ public class ShipmentsController : ControllerBase
         var shipment = await _shipments.ReceiveAsync(id, request);
         return shipment is null ? NotFound() : Ok(shipment);
     }
+
+    [HttpPost("{id:guid}/cancel")]
+    [Authorize(Roles = "Admin,Manager")]
+    [ProducesResponseType(typeof(InboundShipmentDto), 200)]
+    [ProducesResponseType(typeof(ApiError), 400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Cancel(Guid id)
+    {
+        var shipment = await _shipments.CancelAsync(id);
+        return shipment is null ? NotFound() : Ok(shipment);
+    }
 }

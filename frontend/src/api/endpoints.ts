@@ -88,17 +88,15 @@ export const zonesApi = {
   delete: (id: string) => apiClient.delete(`/zones/${id}`),
 };
 
-// Inventory
+// Inventory — GET /inventory returns PagedResult, GET /inventory/alerts returns array
 export const inventoryApi = {
   list: (params?: { lowStockOnly?: boolean; zoneId?: string; productId?: string }) =>
-    apiClient.get<InventoryDto[]>('/inventory', { params }),
-  byProduct: (productId: string) =>
-    apiClient.get<InventoryDto[]>(`/inventory/product/${productId}`),
+    apiClient.get<PagedResult<InventoryDto>>('/inventory', { params }),
   adjust: (data: StockAdjustmentRequest) =>
     apiClient.post<StockAdjustmentDto>('/inventory/adjust', data),
-  lowStock: () => apiClient.get<LowStockAlertDto[]>('/inventory/low-stock'),
-  adjustments: (params?: { productId?: string; limit?: number }) =>
-    apiClient.get<StockAdjustmentDto[]>('/inventory/adjustments', { params }),
+  lowStock: () => apiClient.get<LowStockAlertDto[]>('/inventory/alerts'),
+  adjustments: (params?: { productId?: string; pageSize?: number }) =>
+    apiClient.get<PagedResult<StockAdjustmentDto>>('/inventory/adjustments', { params }),
 };
 
 // Suppliers
@@ -113,28 +111,28 @@ export const suppliersApi = {
   delete: (id: string) => apiClient.delete(`/suppliers/${id}`),
 };
 
-// Shipments
+// Shipments — GET /shipments returns PagedResult
 export const shipmentsApi = {
-  list: (params?: { status?: string; supplierId?: string }) =>
-    apiClient.get<InboundShipmentDto[]>('/shipments', { params }),
+  list: (params?: { status?: string }) =>
+    apiClient.get<PagedResult<InboundShipmentDto>>('/shipments', { params }),
   get: (id: string) => apiClient.get<InboundShipmentDto>(`/shipments/${id}`),
   create: (data: CreateShipmentRequest) =>
     apiClient.post<InboundShipmentDto>('/shipments', data),
   receive: (id: string, data: ReceiveShipmentRequest) =>
     apiClient.post<InboundShipmentDto>(`/shipments/${id}/receive`, data),
-  cancel: (id: string) => apiClient.post(`/shipments/${id}/cancel`),
+  cancel: (id: string) => apiClient.post<InboundShipmentDto>(`/shipments/${id}/cancel`),
 };
 
-// Orders
+// Orders — GET /orders returns PagedResult
 export const ordersApi = {
   list: (params?: { status?: string }) =>
-    apiClient.get<OutboundOrderDto[]>('/orders', { params }),
+    apiClient.get<PagedResult<OutboundOrderDto>>('/orders', { params }),
   get: (id: string) => apiClient.get<OutboundOrderDto>(`/orders/${id}`),
   create: (data: CreateOrderRequest) =>
     apiClient.post<OutboundOrderDto>('/orders', data),
   updateStatus: (id: string, data: UpdateOrderStatusRequest) =>
     apiClient.put<OutboundOrderDto>(`/orders/${id}/status`, data),
-  cancel: (id: string) => apiClient.post(`/orders/${id}/cancel`),
+  cancel: (id: string) => apiClient.post<OutboundOrderDto>(`/orders/${id}/cancel`),
 };
 
 // Analytics

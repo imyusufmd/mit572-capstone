@@ -44,6 +44,24 @@ public class OrdersController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
     }
 
+    [HttpPost("{id:guid}/cancel")]
+    [Authorize(Roles = "Admin,Manager")]
+    [ProducesResponseType(typeof(OutboundOrderDto), 200)]
+    [ProducesResponseType(typeof(ApiError), 400)]
+    [ProducesResponseType(404)]
+    public async Task<IActionResult> Cancel(Guid id)
+    {
+        try
+        {
+            var order = await _orders.UpdateStatusAsync(id, new UpdateOrderStatusRequest { Status = "Cancelled" });
+            return order is null ? NotFound() : Ok(order);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiError(ex.Message));
+        }
+    }
+
     [HttpPut("{id:guid}/status")]
     [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(OutboundOrderDto), 200)]

@@ -27,8 +27,8 @@ export default function InventoryPage() {
     setLoading(true);
     inventoryApi
       .list({ zoneId: zoneId || undefined, lowStockOnly: lowStockOnly || undefined })
-      .then((r) => setItems(r.data))
-      .catch(() => toast('error', 'Failed to load inventory'))
+      .then((r) => setItems(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])))
+      .catch(() => { toast('error', 'Failed to load inventory'); setItems([]); })
       .finally(() => setLoading(false));
   };
 

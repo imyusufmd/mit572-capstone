@@ -24,8 +24,8 @@ export default function ShipmentsListPage() {
     setLoading(true);
     shipmentsApi
       .list({ status: status || undefined })
-      .then((r) => setShipments(r.data))
-      .catch(() => toast('error', 'Failed to load shipments'))
+      .then((r) => setShipments(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])))
+      .catch(() => { toast('error', 'Failed to load shipments'); setShipments([]); })
       .finally(() => setLoading(false));
   };
 

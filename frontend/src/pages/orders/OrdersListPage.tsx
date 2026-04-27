@@ -24,8 +24,8 @@ export default function OrdersListPage() {
     setLoading(true);
     ordersApi
       .list({ status: status || undefined })
-      .then((r) => setOrders(r.data))
-      .catch(() => toast('error', 'Failed to load orders'))
+      .then((r) => setOrders(Array.isArray(r.data) ? r.data : (r.data?.items ?? [])))
+      .catch(() => { toast('error', 'Failed to load orders'); setOrders([]); })
       .finally(() => setLoading(false));
   };
 

@@ -28,15 +28,15 @@ export default function ProductDetailPage() {
     setLoading(true);
     Promise.all([
       productsApi.get(id),
-      inventoryApi.byProduct(id).catch(() => ({ data: [] as InventoryDto[] })),
-      inventoryApi.adjustments({ productId: id, limit: 20 }).catch(() => ({ data: [] as StockAdjustmentDto[] })),
+      inventoryApi.list({ productId: id }).catch(() => ({ data: { items: [] as InventoryDto[] } })),
+      inventoryApi.adjustments({ productId: id, pageSize: 20 }).catch(() => ({ data: { items: [] as StockAdjustmentDto[] } })),
       categoriesApi.list().catch(() => ({ data: [] as CategoryDto[] })),
     ])
       .then(([p, inv, adj, cats]) => {
         setProduct(p.data);
-        setInventory(inv.data);
-        setAdjustments(adj.data);
-        setCategories(cats.data);
+        setInventory(Array.isArray(inv.data) ? inv.data : (inv.data?.items ?? []));
+        setAdjustments(Array.isArray(adj.data) ? adj.data : (adj.data?.items ?? []));
+        setCategories(Array.isArray(cats.data) ? cats.data : []);
       })
       .catch(() => toast('error', 'Failed to load product'))
       .finally(() => setLoading(false));
