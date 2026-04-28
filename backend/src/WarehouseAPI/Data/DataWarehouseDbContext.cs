@@ -22,13 +22,99 @@ public class DataWarehouseDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<DimProduct>().ToTable("dim_products").HasKey(d => d.ProductKey);
-        modelBuilder.Entity<DimZone>().ToTable("dim_zones").HasKey(d => d.ZoneKey);
-        modelBuilder.Entity<DimSupplier>().ToTable("dim_suppliers").HasKey(d => d.SupplierKey);
-        modelBuilder.Entity<DimTime>().ToTable("dim_time").HasKey(d => d.TimeKey);
-        modelBuilder.Entity<FactStockMovement>().ToTable("fact_stock_movements").HasKey(f => f.MovementKey);
-        modelBuilder.Entity<FactOrder>().ToTable("fact_orders").HasKey(f => f.OrderKey);
-        modelBuilder.Entity<FactInventorySnapshot>().ToTable("fact_inventory_snapshots").HasKey(f => f.SnapshotKey);
+        modelBuilder.Entity<DimProduct>(e =>
+        {
+            e.ToTable("dim_products").HasKey(d => d.ProductKey);
+            e.Property(d => d.ProductKey).HasColumnName("product_key");
+            e.Property(d => d.SourceId).HasColumnName("source_id");
+            e.Property(d => d.Sku).HasColumnName("sku");
+            e.Property(d => d.Name).HasColumnName("name");
+            e.Property(d => d.Category).HasColumnName("category");
+            e.Property(d => d.UnitPrice).HasColumnName("unit_price");
+            e.Property(d => d.WeightKg).HasColumnName("weight_kg");
+            e.Property(d => d.IsCurrent).HasColumnName("is_current");
+            e.Property(d => d.EffectiveFrom).HasColumnName("effective_from");
+            e.Property(d => d.EffectiveTo).HasColumnName("effective_to");
+        });
+
+        modelBuilder.Entity<DimZone>(e =>
+        {
+            e.ToTable("dim_zones").HasKey(d => d.ZoneKey);
+            e.Property(d => d.ZoneKey).HasColumnName("zone_key");
+            e.Property(d => d.SourceId).HasColumnName("source_id");
+            e.Property(d => d.Name).HasColumnName("name");
+            e.Property(d => d.ZoneType).HasColumnName("zone_type");
+            e.Property(d => d.Capacity).HasColumnName("capacity");
+        });
+
+        modelBuilder.Entity<DimSupplier>(e =>
+        {
+            e.ToTable("dim_suppliers").HasKey(d => d.SupplierKey);
+            e.Property(d => d.SupplierKey).HasColumnName("supplier_key");
+            e.Property(d => d.SourceId).HasColumnName("source_id");
+            e.Property(d => d.Name).HasColumnName("name");
+            e.Property(d => d.ContactEmail).HasColumnName("contact_email");
+            e.Property(d => d.Rating).HasColumnName("rating");
+        });
+
+        modelBuilder.Entity<DimTime>(e =>
+        {
+            e.ToTable("dim_time").HasKey(d => d.TimeKey);
+            e.Property(d => d.TimeKey).HasColumnName("time_key");
+            e.Property(d => d.FullDate).HasColumnName("full_date");
+            e.Property(d => d.DayOfWeek).HasColumnName("day_of_week");
+            e.Property(d => d.DayName).HasColumnName("day_name");
+            e.Property(d => d.DayOfMonth).HasColumnName("day_of_month");
+            e.Property(d => d.DayOfYear).HasColumnName("day_of_year");
+            e.Property(d => d.WeekOfYear).HasColumnName("week_of_year");
+            e.Property(d => d.MonthNumber).HasColumnName("month_number");
+            e.Property(d => d.MonthName).HasColumnName("month_name");
+            e.Property(d => d.Quarter).HasColumnName("quarter");
+            e.Property(d => d.Year).HasColumnName("year");
+            e.Property(d => d.IsWeekend).HasColumnName("is_weekend");
+        });
+
+        modelBuilder.Entity<FactStockMovement>(e =>
+        {
+            e.ToTable("fact_stock_movements").HasKey(f => f.MovementKey);
+            e.Property(f => f.MovementKey).HasColumnName("movement_key");
+            e.Property(f => f.ProductKey).HasColumnName("product_key");
+            e.Property(f => f.ZoneKey).HasColumnName("zone_key");
+            e.Property(f => f.TimeKey).HasColumnName("time_key");
+            e.Property(f => f.SupplierKey).HasColumnName("supplier_key");
+            e.Property(f => f.MovementType).HasColumnName("movement_type");
+            e.Property(f => f.QtyIn).HasColumnName("qty_in");
+            e.Property(f => f.QtyOut).HasColumnName("qty_out");
+            e.Property(f => f.NetChange).HasColumnName("net_change");
+            e.Property(f => f.ReferenceNumber).HasColumnName("reference_number");
+        });
+
+        modelBuilder.Entity<FactOrder>(e =>
+        {
+            e.ToTable("fact_orders").HasKey(f => f.OrderKey);
+            e.Property(f => f.OrderKey).HasColumnName("order_key");
+            e.Property(f => f.ProductKey).HasColumnName("product_key");
+            e.Property(f => f.TimeKey).HasColumnName("time_key");
+            e.Property(f => f.SupplierKey).HasColumnName("supplier_key");
+            e.Property(f => f.OrderType).HasColumnName("order_type");
+            e.Property(f => f.Quantity).HasColumnName("quantity");
+            e.Property(f => f.Status).HasColumnName("status");
+            e.Property(f => f.OrderReference).HasColumnName("order_reference");
+            e.Property(f => f.FulfillmentDays).HasColumnName("fulfillment_days");
+        });
+
+        modelBuilder.Entity<FactInventorySnapshot>(e =>
+        {
+            e.ToTable("fact_inventory_snapshots").HasKey(f => f.SnapshotKey);
+            e.Property(f => f.SnapshotKey).HasColumnName("snapshot_key");
+            e.Property(f => f.ProductKey).HasColumnName("product_key");
+            e.Property(f => f.ZoneKey).HasColumnName("zone_key");
+            e.Property(f => f.TimeKey).HasColumnName("time_key");
+            e.Property(f => f.QuantityOnHand).HasColumnName("quantity_on_hand");
+            e.Property(f => f.MinThreshold).HasColumnName("min_threshold");
+            e.Property(f => f.IsBelowThreshold).HasColumnName("is_below_threshold");
+            e.Property(f => f.StockValue).HasColumnName("stock_value");
+        });
     }
 }
 
