@@ -76,9 +76,7 @@ services:
   # Node-RED (ETL Pipeline)
   # ============================================================
   nodered:
-    build:
-      context: ../etl
-      dockerfile: Dockerfile
+    build: ../etl
     container_name: warehouse-nodered
     ports:
       - "1880:1880"
