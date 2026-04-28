@@ -168,22 +168,60 @@
 - [x] **Phase F** (VM4 — Grafana + Prometheus running at `http://168.62.51.65:3000`) ✅
 
 **VM IPs (resource group MIT572-05)**:
-- VM1 Ubuntu/Docker: `20.163.216.177` (public), `10.0.1.4` internal — app at `http://20.163.216.177/`
-- VM2 Windows/AD+PG: `40.117.250.121` (public), PostgreSQL on `10.0.1.4:5432`
-- VM3 Windows 11/Workstation: `20.127.116.72` (public) — SSMS + pgAdmin configured
-- VM4 Ubuntu/Monitoring: `168.62.51.65` (public) — Grafana at `:3000`, Prometheus running
+- VM1 Ubuntu/Docker: `23.100.28.16` (public), `10.0.1.4` internal — app at `http://23.100.28.16/`
+- VM2 Windows/AD+PG: `20.127.3.25` (public), PostgreSQL on `10.0.1.4:5432`
+- VM3 Windows 11/Workstation: `168.62.56.32` (public) — SSMS + pgAdmin configured
+- VM4 Ubuntu/Monitoring: `20.120.98.3` (public) — Grafana at `:3000`, Prometheus running
 
 **Key Fixes**:
 - `MissingMethodException` on login: `Npgsql 10.0.0-preview.3` called internal EF Core preview API removed in 10.0.5 GA → fixed by upgrading Npgsql to `10.0.1`
 - Auth mode showing "Active Directory" in dev: `DevAuthService.IsAvailable()` was returning true → fixed to false
 - PostgreSQL connection working: `Host=10.0.1.4;Port=5432;Database=warehouse;Username=app_user;Password=Warehouse@2026!`
-
-**Next Steps**:
-- Frontend Batch 2 (in progress on `dev-frontend` branch): Products List ✅, Product Detail ✅, Inventory ✅
-- Frontend remaining: Zones, Suppliers, Categories, Shipments, Orders, Analytics, Alerts, Settings pages + wire all routes in App.tsx
+- Frontend black screen crashes: `PagedResult<T>` objects passed to `.map()` directly — fixed by extracting `.items` with array guard
+- Cancel endpoints missing for shipments/orders — added `POST /{id}/cancel` to both controllers
 
 **Known Issues / Blockers**:
 - `libgssapi_krb5.so.2` warning in API container on startup — non-fatal, GSSAPI/Kerberos not needed for password auth
+- Auth is in dev mode (any username/password accepted) — AD LDAP not wired up yet
+
+---
+
+### Session 4 — 2026-04-27/28
+
+**Status**: ETL Pipeline COMPLETE — Analytics page showing live data ✅
+
+**Completed**:
+- [x] Created `etl/` folder with full Node-RED ETL pipeline
+- [x] `etl/Dockerfile` — extends `nodered/node-red:latest`, pre-installs `node-red-contrib-postgresql` + `node-red-contrib-mssql-plus`
+- [x] `etl/flows.json` — two flow tabs: "Dims + Facts" (every 15 min + 5s startup) and "Daily Snapshot" (00:05 CST)
+- [x] `etl/settings.js` — `credentialSecret: false`, explicit `flowFile: flows.json`
+- [x] `etl/entrypoint.sh` — generates `flows_cred.json` from env vars, always overwrites `settings.js`
+- [x] `infra/docker-compose.yml` — switched nodered to custom `build: ../etl`, added env vars
+- [x] Initialized `WarehouseDW` SQL Server database (star schema) via `sqlcmd` on VM1
+- [x] Fixed `DataWarehouseDbContext` — added explicit snake_case column mappings for all 7 DW entities
+- [x] Fixed `AnalyticsController` — materialize rows before in-memory aggregation (EF Core LINQ translation fix)
+- [x] **Analytics page live**: all 4 charts rendering with real ETL data (25 products, 16 movements, 11 orders, 25 snapshots)
+- [x] Merged `dev-etl` → `dev-main`
+
+**ETL Architecture**:
+- Source: PostgreSQL `warehouse` DB on VM2 (`10.0.1.4:5432`)
+- Target: SQL Server `WarehouseDW` DB on VM1 (`sqlserver:1433`)
+- Dims: MERGE (upsert) on `source_id` for products, zones, suppliers
+- Facts: TRUNCATE + full reload for stock movements + orders
+- Snapshot: DELETE today + INSERT for inventory snapshots
+- Schedule: every 15 min for dims+facts, daily 00:05 CST for snapshot
+- Manual trigger: inject button in Node-RED UI at `http://23.100.28.16:1880`
+
+**Key Fixes This Session**:
+- Node-RED credential encryption: settings.js was not being overwritten from volume → fixed entrypoint to always copy
+- Node-RED blank flows: no `flowFile` set → hostname-based file generated → fixed by setting `flowFile: flows.json` in settings.js
+- EF Core `Invalid column name 'ProductKey'`: DW tables use snake_case, EF Core expected PascalCase → added explicit `HasColumnName()` mappings
+- EF Core LINQ translation errors: `Distinct().Count()` inside GroupBy + conditional cast not translatable → fixed by materializing first then aggregating in-memory
+
+**Next Steps**:
+- End-to-end verification of all frontend pages
+- Active Directory auth wiring (optional for demo)
+- Grafana dashboards on VM4 (optional)
 
 ---
 
