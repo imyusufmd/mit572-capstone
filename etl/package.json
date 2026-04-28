@@ -1,0 +1,9 @@
+{
+  "name": "warehouse-etl",
+  "version": "1.0.0",
+  "description": "Node-RED ETL: PostgreSQL OLTP → SQL Server Data Warehouse",
+  "dependencies": {
+    "node-red-contrib-postgresql": "^0.15.0",
+    "node-red-contrib-mssql-plus": "^0.13.0"
+  }
+}
