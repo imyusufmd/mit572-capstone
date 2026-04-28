@@ -9,10 +9,9 @@ if [ ! -f "$DATA_DIR/flows.json" ]; then
     cp /etl-init/flows.json "$DATA_DIR/flows.json"
 fi
 
-if [ ! -f "$DATA_DIR/settings.js" ]; then
-    echo "[ETL] Installing settings..."
-    cp /etl-init/settings.js "$DATA_DIR/settings.js"
-fi
+# Always overwrite settings.js so credentialSecret:false is guaranteed
+echo "[ETL] Installing settings..."
+cp /etl-init/settings.js "$DATA_DIR/settings.js"
 
 # Always regenerate credentials from env vars (plaintext, credentialSecret=false)
 echo "[ETL] Writing credentials from environment..."
