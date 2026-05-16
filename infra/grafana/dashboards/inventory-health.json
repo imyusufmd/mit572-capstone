@@ -1,0 +1,288 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Total Products\" FROM products WHERE is_active = true",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Active Products",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Low Stock\" FROM inventory WHERE quantity <= min_threshold",
+          "refId": "A"
+        }
+      ],
+      "title": "Low Stock Alerts",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(quantity) AS \"Total Units\" FROM inventory",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Stock Units",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Zones\" FROM warehouse_zones WHERE is_active = true",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Zones",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "orientation": "horizontal"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT wz.name AS zone, SUM(i.quantity) AS stock FROM inventory i JOIN warehouse_zones wz ON i.zone_id = wz.id GROUP BY wz.name ORDER BY stock DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Stock by Zone",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT c.name AS category, SUM(i.quantity) AS stock FROM inventory i JOIN products p ON i.product_id = p.id JOIN categories c ON p.category_id = c.id GROUP BY c.name ORDER BY stock DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Stock by Category",
+      "transformations": [
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "category",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "stock",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT p.name AS product, c.name AS category, i.quantity AS \"On Hand\", i.min_threshold AS \"Reorder At\", wz.name AS zone FROM inventory i JOIN products p ON i.product_id = p.id JOIN categories c ON p.category_id = c.id JOIN warehouse_zones wz ON i.zone_id = wz.id WHERE i.quantity <= i.min_threshold AND p.is_active = true ORDER BY i.quantity ASC LIMIT 10",
+          "refId": "A"
+        }
+      ],
+      "title": "Low Stock Products",
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "tags": [
+    "warehouse"
+  ],
+  "timezone": "browser",
+  "title": "Inventory Health",
+  "uid": "dfm73iu5kn4sgf"
+}

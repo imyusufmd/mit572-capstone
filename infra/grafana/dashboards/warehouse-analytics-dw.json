@@ -1,0 +1,261 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS [Total Products] FROM dim_products WHERE is_current = 1",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Products in DW",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS [Movements] FROM fact_stock_movements",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Stock Movements",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS [Orders] FROM fact_orders",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Orders (DW)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT CONVERT(varchar, MAX(t.full_date), 23) AS [Latest Snapshot] FROM fact_inventory_snapshots s JOIN dim_time t ON s.time_key = t.time_key",
+          "refId": "A"
+        }
+      ],
+      "title": "Latest Snapshot Date",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT movement_type AS [Type], COUNT(*) AS [Count] FROM fact_stock_movements GROUP BY movement_type ORDER BY [Count] DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Stock Movements by Type",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT status AS [Status], COUNT(*) AS [Count] FROM fact_orders GROUP BY status ORDER BY [Count] DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Orders by Status (DW)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "mssql",
+        "uid": "bfm74bf7sqgw0c"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "uid": "bfm74bf7sqgw0c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT z.name AS [Zone], COUNT(DISTINCT s.product_key) AS [Products], SUM(s.quantity_on_hand) AS [Total Units] FROM fact_inventory_snapshots s JOIN dim_zones z ON s.zone_key = z.zone_key GROUP BY z.name ORDER BY [Total Units] DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Inventory by Zone (DW)",
+      "type": "table"
+    }
+  ],
+  "refresh": "15m",
+  "tags": [
+    "warehouse",
+    "dw"
+  ],
+  "timezone": "browser",
+  "title": "Warehouse Analytics (DW)",
+  "uid": "cfm73ivi75z40c"
+}

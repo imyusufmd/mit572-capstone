@@ -1,0 +1,275 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "orange",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Pending\" FROM outbound_orders WHERE status IN ('Pending','Picking','Picked','Packing','Packed')",
+          "refId": "A"
+        }
+      ],
+      "title": "Pending Orders",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Shipped Today\" FROM outbound_orders WHERE status = 'Shipped' AND DATE(updated_at) = CURRENT_DATE",
+          "refId": "A"
+        }
+      ],
+      "title": "Shipped Today",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "blue",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Open Shipments\" FROM inbound_shipments WHERE status NOT IN ('Received','Cancelled')",
+          "refId": "A"
+        }
+      ],
+      "title": "Open Inbound Shipments",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "purple",
+            "mode": "fixed"
+          }
+        }
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(*) AS \"Adjustments\" FROM stock_adjustments WHERE created_at >= NOW() - INTERVAL '30 days'",
+          "refId": "A"
+        }
+      ],
+      "title": "Stock Adjustments (30d)",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "pieType": "donut"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT status, COUNT(*) AS count FROM outbound_orders GROUP BY status ORDER BY count DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Orders by Status",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "displayLabels": [
+          "name",
+          "value"
+        ],
+        "pieType": "pie"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT status, COUNT(*) AS count FROM inbound_shipments GROUP BY status ORDER BY count DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Inbound Shipments by Status",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "afm74bee6fta8c"
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "uid": "afm74bee6fta8c"
+          },
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT o.order_number AS \"Order #\", o.status, o.priority, o.ship_to_name AS \"Ship To\", o.created_at AS \"Created\" FROM outbound_orders o ORDER BY o.created_at DESC LIMIT 20",
+          "refId": "A"
+        }
+      ],
+      "title": "Recent Orders",
+      "type": "table"
+    }
+  ],
+  "refresh": "5m",
+  "tags": [
+    "warehouse"
+  ],
+  "timezone": "browser",
+  "title": "Warehouse Operations",
+  "uid": "efm73iutunls0b"
+}
