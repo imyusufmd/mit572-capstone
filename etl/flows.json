@@ -1,24 +1,34 @@
 [
   {
     "id": "pg-config-001",
-    "type": "postgresDB",
+    "type": "postgreSQLConfig",
     "name": "Warehouse PostgreSQL",
-    "host": "${POSTGRES_HOST}",
+    "host": "POSTGRES_HOST",
+    "hostFieldType": "env",
     "port": "5432",
+    "portFieldType": "num",
     "database": "warehouse",
+    "databaseFieldType": "str",
     "ssl": false,
+    "sslFieldType": "bool",
+    "user": "app_user",
+    "userFieldType": "str",
+    "password": "POSTGRES_PASSWORD",
+    "passwordFieldType": "env",
     "max": "10",
-    "min": "1",
-    "idle": "1000"
+    "maxFieldType": "num",
+    "idle": "1000",
+    "idleFieldType": "num"
   },
   {
     "id": "mssql-config-001",
     "type": "MSSQL-CN",
     "name": "Warehouse DW (SQL Server)",
-    "host": "sqlserver",
+    "server": "sqlserver",
     "port": "1433",
-    "database": "warehouse_dw",
-    "useEncrypt": false,
+    "database": "WarehouseDW",
+    "encyption": false,
+    "trustServerCertificate": true,
     "useArithAbort": true,
     "connectTimeout": "15000",
     "requestTimeout": "15000",
@@ -45,7 +55,15 @@
     "type": "inject",
     "z": "tab-dims-facts",
     "name": "Every 15 min",
-    "props": [{"p": "payload"}, {"p": "topic", "vt": "str"}],
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
     "repeat": "900",
     "crontab": "",
     "once": true,
@@ -55,18 +73,26 @@
     "payloadType": "date",
     "x": 120,
     "y": 60,
-    "wires": [["n-fn-start"]]
+    "wires": [
+      [
+        "n-fn-start"
+      ]
+    ]
   },
   {
     "id": "n-fn-start",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Init run",
-    "func": "msg.runStart = Date.now();\nnode.log('ETL run started at ' + new Date().toISOString());\nmsg.payload = `\nSELECT p.id, p.sku, p.name, p.unit_price, p.weight_kg,\n       c.name AS category_name\nFROM products p\nLEFT JOIN categories c ON c.id = p.category_id\nWHERE p.is_active = true\nORDER BY p.created_at\n`;\nreturn msg;",
+    "func": "msg.runStart = Date.now();\nnode.log('ETL run started at ' + new Date().toISOString());\nmsg.query = msg.payload = `\nSELECT p.id, p.sku, p.name, p.unit_price, p.weight_kg,\n       c.name AS category_name\nFROM products p\nLEFT JOIN categories c ON c.id = p.category_id\nWHERE p.is_active = true\nORDER BY p.created_at\n`;\nreturn msg;",
     "outputs": 1,
     "x": 300,
     "y": 60,
-    "wires": [["n-pg-products"]]
+    "wires": [
+      [
+        "n-pg-products"
+      ]
+    ]
   },
   {
     "id": "n-pg-products",
@@ -74,14 +100,18 @@
     "z": "tab-dims-facts",
     "name": "PG: products",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 490,
     "y": 60,
-    "wires": [["n-fn-merge-products"]]
+    "wires": [
+      [
+        "n-fn-merge-products"
+      ]
+    ]
   },
   {
     "id": "n-fn-merge-products",
@@ -92,7 +122,11 @@
     "outputs": 1,
     "x": 700,
     "y": 60,
-    "wires": [["n-ss-merge-products"]]
+    "wires": [
+      [
+        "n-ss-merge-products"
+      ]
+    ]
   },
   {
     "id": "n-ss-merge-products",
@@ -106,18 +140,26 @@
     "throwErrors": 1,
     "x": 950,
     "y": 60,
-    "wires": [["n-fn-pg-zones"]]
+    "wires": [
+      [
+        "n-fn-pg-zones"
+      ]
+    ]
   },
   {
     "id": "n-fn-pg-zones",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Query zones",
-    "func": "msg.payload = 'SELECT id,name,zone_type,capacity FROM warehouse_zones WHERE is_active=true ORDER BY created_at';\nreturn msg;",
+    "func": "msg.query = msg.payload = 'SELECT id,name,zone_type,capacity FROM warehouse_zones WHERE is_active=true ORDER BY created_at';\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 140,
-    "wires": [["n-pg-zones"]]
+    "wires": [
+      [
+        "n-pg-zones"
+      ]
+    ]
   },
   {
     "id": "n-pg-zones",
@@ -125,25 +167,33 @@
     "z": "tab-dims-facts",
     "name": "PG: zones",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 300,
     "y": 140,
-    "wires": [["n-fn-merge-zones"]]
+    "wires": [
+      [
+        "n-fn-merge-zones"
+      ]
+    ]
   },
   {
     "id": "n-fn-merge-zones",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "MERGE dim_zones SQL",
-    "func": "function esc(v) {\n  if (v===null||v===undefined) return 'NULL';\n  if (typeof v==='number') return v;\n  return \"'\" + String(v).replace(/'/g,\"''\") + \"'\";\n}\nconst rows = msg.payload;\nif (!rows||rows.length===0){msg.payload='SELECT 1';return msg;}\nconst vals = rows.map(r=>`(${esc(String(r.id))},${esc(r.name)},${esc(r.zone_type)},${r.capacity||0})`).join(',');\nmsg.payload = `MERGE dim_zones AS t USING (VALUES ${vals}) AS s(source_id,name,zone_type,capacity) ON t.source_id=s.source_id WHEN MATCHED THEN UPDATE SET t.name=s.name,t.zone_type=s.zone_type,t.capacity=s.capacity WHEN NOT MATCHED THEN INSERT(source_id,name,zone_type,capacity) VALUES(s.source_id,s.name,s.zone_type,s.capacity);`;\nreturn msg;",
+    "func": "function esc(v) {\n  if (v===null||v===undefined) return 'NULL';\n  if (typeof v==='number') return v;\n  return \"'\" + String(v).replace(/'/g,\"''\") + \"'\";\n}\nconst rows = msg.payload;\nif (!rows||rows.length===0){msg.payload='SELECT 1';return msg;}\nconst vals = rows.map(r=>`(${esc(String(r.id))},${esc(r.name)},${esc(r.zone_type||'Unknown')},${r.capacity||0})`).join(',');\nmsg.payload = `MERGE dim_zones AS t USING (VALUES ${vals}) AS s(source_id,name,zone_type,capacity) ON t.source_id=s.source_id WHEN MATCHED THEN UPDATE SET t.name=s.name,t.zone_type=s.zone_type,t.capacity=s.capacity WHEN NOT MATCHED THEN INSERT(source_id,name,zone_type,capacity) VALUES(s.source_id,s.name,s.zone_type,s.capacity);`;\nreturn msg;",
     "outputs": 1,
     "x": 490,
     "y": 140,
-    "wires": [["n-ss-merge-zones"]]
+    "wires": [
+      [
+        "n-ss-merge-zones"
+      ]
+    ]
   },
   {
     "id": "n-ss-merge-zones",
@@ -157,18 +207,26 @@
     "throwErrors": 1,
     "x": 700,
     "y": 140,
-    "wires": [["n-fn-pg-suppliers"]]
+    "wires": [
+      [
+        "n-fn-pg-suppliers"
+      ]
+    ]
   },
   {
     "id": "n-fn-pg-suppliers",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Query suppliers",
-    "func": "msg.payload = 'SELECT id,name,contact_email,rating FROM suppliers WHERE is_active=true ORDER BY created_at';\nreturn msg;",
+    "func": "msg.query = msg.payload = 'SELECT id,name,contact_email,rating FROM suppliers WHERE is_active=true ORDER BY created_at';\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 220,
-    "wires": [["n-pg-suppliers"]]
+    "wires": [
+      [
+        "n-pg-suppliers"
+      ]
+    ]
   },
   {
     "id": "n-pg-suppliers",
@@ -176,14 +234,18 @@
     "z": "tab-dims-facts",
     "name": "PG: suppliers",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 300,
     "y": 220,
-    "wires": [["n-fn-merge-suppliers"]]
+    "wires": [
+      [
+        "n-fn-merge-suppliers"
+      ]
+    ]
   },
   {
     "id": "n-fn-merge-suppliers",
@@ -194,7 +256,11 @@
     "outputs": 1,
     "x": 490,
     "y": 220,
-    "wires": [["n-ss-merge-suppliers"]]
+    "wires": [
+      [
+        "n-ss-merge-suppliers"
+      ]
+    ]
   },
   {
     "id": "n-ss-merge-suppliers",
@@ -208,7 +274,11 @@
     "throwErrors": 1,
     "x": 700,
     "y": 220,
-    "wires": [["n-fn-load-product-keys"]]
+    "wires": [
+      [
+        "n-fn-load-product-keys"
+      ]
+    ]
   },
   {
     "id": "n-fn-load-product-keys",
@@ -219,7 +289,11 @@
     "outputs": 1,
     "x": 120,
     "y": 320,
-    "wires": [["n-ss-sel-product-keys"]]
+    "wires": [
+      [
+        "n-ss-sel-product-keys"
+      ]
+    ]
   },
   {
     "id": "n-ss-sel-product-keys",
@@ -233,18 +307,26 @@
     "throwErrors": 1,
     "x": 340,
     "y": 320,
-    "wires": [["n-fn-build-product-map"]]
+    "wires": [
+      [
+        "n-fn-build-product-map"
+      ]
+    ]
   },
   {
     "id": "n-fn-build-product-map",
     "type": "function",
     "z": "tab-dims-facts",
-    "name": "Build productMap → load zone keys",
+    "name": "Build productMap \u2192 load zone keys",
     "func": "msg.productMap = {};\n(msg.payload||[]).forEach(r => { msg.productMap[r.source_id] = r.product_key; });\nmsg.payload = 'SELECT zone_key, source_id FROM dim_zones';\nreturn msg;",
     "outputs": 1,
     "x": 580,
     "y": 320,
-    "wires": [["n-ss-sel-zone-keys"]]
+    "wires": [
+      [
+        "n-ss-sel-zone-keys"
+      ]
+    ]
   },
   {
     "id": "n-ss-sel-zone-keys",
@@ -258,18 +340,26 @@
     "throwErrors": 1,
     "x": 820,
     "y": 320,
-    "wires": [["n-fn-build-zone-map"]]
+    "wires": [
+      [
+        "n-fn-build-zone-map"
+      ]
+    ]
   },
   {
     "id": "n-fn-build-zone-map",
     "type": "function",
     "z": "tab-dims-facts",
-    "name": "Build zoneMap → load supplier keys",
+    "name": "Build zoneMap \u2192 load supplier keys",
     "func": "msg.zoneMap = {};\n(msg.payload||[]).forEach(r => { msg.zoneMap[r.source_id] = r.zone_key; });\nmsg.payload = 'SELECT supplier_key, source_id FROM dim_suppliers';\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 400,
-    "wires": [["n-ss-sel-supplier-keys"]]
+    "wires": [
+      [
+        "n-ss-sel-supplier-keys"
+      ]
+    ]
   },
   {
     "id": "n-ss-sel-supplier-keys",
@@ -283,18 +373,26 @@
     "throwErrors": 1,
     "x": 360,
     "y": 400,
-    "wires": [["n-fn-build-supplier-map"]]
+    "wires": [
+      [
+        "n-fn-build-supplier-map"
+      ]
+    ]
   },
   {
     "id": "n-fn-build-supplier-map",
     "type": "function",
     "z": "tab-dims-facts",
-    "name": "Build supplierMap → TRUNCATE",
+    "name": "Build supplierMap \u2192 TRUNCATE",
     "func": "msg.supplierMap = {};\n(msg.payload||[]).forEach(r => { msg.supplierMap[r.source_id] = r.supplier_key; });\nmsg.payload = 'TRUNCATE TABLE fact_stock_movements; TRUNCATE TABLE fact_orders;';\nreturn msg;",
     "outputs": 1,
     "x": 620,
     "y": 400,
-    "wires": [["n-ss-truncate"]]
+    "wires": [
+      [
+        "n-ss-truncate"
+      ]
+    ]
   },
   {
     "id": "n-ss-truncate",
@@ -308,18 +406,26 @@
     "throwErrors": 1,
     "x": 880,
     "y": 400,
-    "wires": [["n-fn-pg-inbound-query"]]
+    "wires": [
+      [
+        "n-fn-pg-inbound-query"
+      ]
+    ]
   },
   {
     "id": "n-fn-pg-inbound-query",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Query inbound movements",
-    "func": "msg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.received_qty,\n  s.supplier_id, s.reference_number,\n  s.received_date,\n  s.expected_date,\n  s.created_at,\n  s.received_date AS fact_date,\n  CASE WHEN s.received_date IS NOT NULL\n    THEN (CAST(s.received_date AS DATE) - CAST(s.created_at AS DATE))\n    ELSE NULL\n  END AS fulfillment_days,\n  s.status\nFROM inbound_shipment_items i\nJOIN inbound_shipments s ON s.id = i.shipment_id\nWHERE i.received_qty > 0 AND s.received_date IS NOT NULL\nORDER BY s.received_date\n`;\nreturn msg;",
+    "func": "msg.query = msg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.received_qty,\n  s.supplier_id, s.reference_number,\n  s.received_date,\n  s.expected_date,\n  s.created_at,\n  s.received_date AS fact_date,\n  CASE WHEN s.received_date IS NOT NULL\n    THEN (CAST(s.received_date AS DATE) - CAST(s.created_at AS DATE))\n    ELSE NULL\n  END AS fulfillment_days,\n  s.status\nFROM inbound_shipment_items i\nJOIN inbound_shipments s ON s.id = i.shipment_id\nWHERE i.received_qty > 0 AND s.received_date IS NOT NULL\nORDER BY s.received_date\n`;\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 500,
-    "wires": [["n-pg-inbound"]]
+    "wires": [
+      [
+        "n-pg-inbound"
+      ]
+    ]
   },
   {
     "id": "n-pg-inbound",
@@ -327,14 +433,18 @@
     "z": "tab-dims-facts",
     "name": "PG: inbound movements",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 380,
     "y": 500,
-    "wires": [["n-fn-insert-inbound"]]
+    "wires": [
+      [
+        "n-fn-insert-inbound"
+      ]
+    ]
   },
   {
     "id": "n-fn-insert-inbound",
@@ -345,7 +455,11 @@
     "outputs": 1,
     "x": 640,
     "y": 500,
-    "wires": [["n-ss-insert-inbound-mv"]]
+    "wires": [
+      [
+        "n-ss-insert-inbound-mv"
+      ]
+    ]
   },
   {
     "id": "n-ss-insert-inbound-mv",
@@ -359,7 +473,11 @@
     "throwErrors": 1,
     "x": 920,
     "y": 500,
-    "wires": [["n-fn-inbound-orders"]]
+    "wires": [
+      [
+        "n-fn-inbound-orders"
+      ]
+    ]
   },
   {
     "id": "n-fn-inbound-orders",
@@ -370,7 +488,11 @@
     "outputs": 1,
     "x": 120,
     "y": 580,
-    "wires": [["n-ss-insert-inbound-ord"]]
+    "wires": [
+      [
+        "n-ss-insert-inbound-ord"
+      ]
+    ]
   },
   {
     "id": "n-ss-insert-inbound-ord",
@@ -384,18 +506,26 @@
     "throwErrors": 1,
     "x": 380,
     "y": 580,
-    "wires": [["n-fn-pg-outbound-query"]]
+    "wires": [
+      [
+        "n-fn-pg-outbound-query"
+      ]
+    ]
   },
   {
     "id": "n-fn-pg-outbound-query",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Query outbound movements",
-    "func": "msg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.quantity,\n  o.order_number,\n  o.shipped_at AS fact_date,\n  o.status,\n  CASE WHEN o.delivered_at IS NOT NULL\n    THEN EXTRACT(DAY FROM o.delivered_at - o.created_at)\n    ELSE NULL\n  END AS fulfillment_days\nFROM outbound_order_items i\nJOIN outbound_orders o ON o.id = i.order_id\nWHERE o.shipped_at IS NOT NULL\nORDER BY o.shipped_at\n`;\nreturn msg;",
+    "func": "msg.query = msg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.quantity,\n  o.order_number,\n  o.shipped_at AS fact_date,\n  o.status,\n  CASE WHEN o.delivered_at IS NOT NULL\n    THEN EXTRACT(DAY FROM o.delivered_at - o.created_at)\n    ELSE NULL\n  END AS fulfillment_days\nFROM outbound_order_items i\nJOIN outbound_orders o ON o.id = i.order_id\nWHERE o.shipped_at IS NOT NULL\nORDER BY o.shipped_at\n`;\nreturn msg;",
     "outputs": 1,
     "x": 640,
     "y": 580,
-    "wires": [["n-pg-outbound"]]
+    "wires": [
+      [
+        "n-pg-outbound"
+      ]
+    ]
   },
   {
     "id": "n-pg-outbound",
@@ -403,14 +533,18 @@
     "z": "tab-dims-facts",
     "name": "PG: outbound movements",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 900,
     "y": 580,
-    "wires": [["n-fn-insert-outbound"]]
+    "wires": [
+      [
+        "n-fn-insert-outbound"
+      ]
+    ]
   },
   {
     "id": "n-fn-insert-outbound",
@@ -421,7 +555,11 @@
     "outputs": 1,
     "x": 120,
     "y": 660,
-    "wires": [["n-ss-insert-outbound-mv"]]
+    "wires": [
+      [
+        "n-ss-insert-outbound-mv"
+      ]
+    ]
   },
   {
     "id": "n-ss-insert-outbound-mv",
@@ -435,7 +573,11 @@
     "throwErrors": 1,
     "x": 380,
     "y": 660,
-    "wires": [["n-fn-outbound-orders"]]
+    "wires": [
+      [
+        "n-fn-outbound-orders"
+      ]
+    ]
   },
   {
     "id": "n-fn-outbound-orders",
@@ -446,7 +588,11 @@
     "outputs": 1,
     "x": 640,
     "y": 660,
-    "wires": [["n-ss-insert-outbound-ord"]]
+    "wires": [
+      [
+        "n-ss-insert-outbound-ord"
+      ]
+    ]
   },
   {
     "id": "n-ss-insert-outbound-ord",
@@ -460,18 +606,26 @@
     "throwErrors": 1,
     "x": 900,
     "y": 660,
-    "wires": [["n-fn-pg-adj-query"]]
+    "wires": [
+      [
+        "n-fn-pg-adj-query"
+      ]
+    ]
   },
   {
     "id": "n-fn-pg-adj-query",
     "type": "function",
     "z": "tab-dims-facts",
     "name": "Query adjustments",
-    "func": "msg.payload = `\nSELECT\n  a.product_id, a.zone_id, a.qty_change,\n  a.reason, a.created_at AS fact_date\nFROM stock_adjustments a\nORDER BY a.created_at\n`;\nreturn msg;",
+    "func": "msg.query = msg.payload = `\nSELECT\n  a.product_id, a.zone_id, a.qty_change,\n  a.reason, a.created_at AS fact_date\nFROM stock_adjustments a\nORDER BY a.created_at\n`;\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 740,
-    "wires": [["n-pg-adj"]]
+    "wires": [
+      [
+        "n-pg-adj"
+      ]
+    ]
   },
   {
     "id": "n-pg-adj",
@@ -479,14 +633,18 @@
     "z": "tab-dims-facts",
     "name": "PG: adjustments",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 360,
     "y": 740,
-    "wires": [["n-fn-insert-adj"]]
+    "wires": [
+      [
+        "n-fn-insert-adj"
+      ]
+    ]
   },
   {
     "id": "n-fn-insert-adj",
@@ -497,7 +655,11 @@
     "outputs": 1,
     "x": 600,
     "y": 740,
-    "wires": [["n-ss-insert-adj"]]
+    "wires": [
+      [
+        "n-ss-insert-adj"
+      ]
+    ]
   },
   {
     "id": "n-ss-insert-adj",
@@ -511,7 +673,11 @@
     "throwErrors": 1,
     "x": 860,
     "y": 740,
-    "wires": [["n-debug-facts"]]
+    "wires": [
+      [
+        "n-debug-facts"
+      ]
+    ]
   },
   {
     "id": "n-debug-facts",
@@ -539,7 +705,11 @@
     "uncaught": false,
     "x": 420,
     "y": 820,
-    "wires": [["n-debug-error"]]
+    "wires": [
+      [
+        "n-debug-error"
+      ]
+    ]
   },
   {
     "id": "n-debug-error",
@@ -563,7 +733,15 @@
     "type": "inject",
     "z": "tab-snapshot",
     "name": "Daily 00:05 CST",
-    "props": [{"p": "payload"}, {"p": "topic", "vt": "str"}],
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
     "repeat": "",
     "crontab": "5 6 * * *",
     "once": false,
@@ -573,18 +751,26 @@
     "payloadType": "date",
     "x": 120,
     "y": 60,
-    "wires": [["s-fn-get-timekey"]]
+    "wires": [
+      [
+        "s-fn-get-timekey"
+      ]
+    ]
   },
   {
     "id": "s-fn-get-timekey",
     "type": "function",
     "z": "tab-snapshot",
     "name": "Get today's time_key",
-    "func": "const today = new Date().toISOString().split('T')[0];\nmsg.todayStr = today;\nmsg.payload = `SELECT time_key FROM dim_time WHERE full_date = '${today}'`;\nreturn msg;",
+    "func": "const today = new Date().toISOString().split('T')[0];\nmsg.todayStr = today;\nmsg.query = msg.payload = `SELECT time_key FROM dim_time WHERE full_date = '${today}'`;\nreturn msg;",
     "outputs": 1,
     "x": 340,
     "y": 60,
-    "wires": [["s-ss-get-timekey"]]
+    "wires": [
+      [
+        "s-ss-get-timekey"
+      ]
+    ]
   },
   {
     "id": "s-ss-get-timekey",
@@ -598,18 +784,26 @@
     "throwErrors": 1,
     "x": 580,
     "y": 60,
-    "wires": [["s-fn-store-timekey"]]
+    "wires": [
+      [
+        "s-fn-store-timekey"
+      ]
+    ]
   },
   {
     "id": "s-fn-store-timekey",
     "type": "function",
     "z": "tab-snapshot",
-    "name": "Store timeKey → load product keys",
+    "name": "Store timeKey \u2192 load product keys",
     "func": "const rows = msg.payload||[];\nif (!rows.length) {\n  node.error('No time_key found for today: ' + msg.todayStr + '. Is dim_time seeded through 2027?');\n  return null;\n}\nmsg.todayTimeKey = rows[0].time_key;\nmsg.payload = `DELETE FROM fact_inventory_snapshots WHERE time_key=${msg.todayTimeKey}; SELECT product_key,source_id FROM dim_products WHERE is_current=1`;\nreturn msg;",
     "outputs": 1,
     "x": 120,
     "y": 140,
-    "wires": [["s-ss-delete-today"]]
+    "wires": [
+      [
+        "s-ss-delete-today"
+      ]
+    ]
   },
   {
     "id": "s-ss-delete-today",
@@ -623,18 +817,26 @@
     "throwErrors": 1,
     "x": 420,
     "y": 140,
-    "wires": [["s-fn-build-product-map"]]
+    "wires": [
+      [
+        "s-fn-build-product-map"
+      ]
+    ]
   },
   {
     "id": "s-fn-build-product-map",
     "type": "function",
     "z": "tab-snapshot",
-    "name": "Build productMap → load zone keys",
+    "name": "Build productMap \u2192 load zone keys",
     "func": "msg.productMap = {};\n(msg.payload||[]).forEach(r => { msg.productMap[r.source_id] = r.product_key; });\nmsg.payload = 'SELECT zone_key,source_id FROM dim_zones';\nreturn msg;",
     "outputs": 1,
     "x": 700,
     "y": 140,
-    "wires": [["s-ss-zone-keys"]]
+    "wires": [
+      [
+        "s-ss-zone-keys"
+      ]
+    ]
   },
   {
     "id": "s-ss-zone-keys",
@@ -648,18 +850,26 @@
     "throwErrors": 1,
     "x": 120,
     "y": 220,
-    "wires": [["s-fn-build-zone-map"]]
+    "wires": [
+      [
+        "s-fn-build-zone-map"
+      ]
+    ]
   },
   {
     "id": "s-fn-build-zone-map",
     "type": "function",
     "z": "tab-snapshot",
-    "name": "Build zoneMap → query inventory",
-    "func": "msg.zoneMap = {};\n(msg.payload||[]).forEach(r => { msg.zoneMap[r.source_id] = r.zone_key; });\nmsg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.quantity, i.min_threshold,\n  p.unit_price\nFROM inventory i\nJOIN products p ON p.id = i.product_id\nORDER BY i.product_id\n`;\nreturn msg;",
+    "name": "Build zoneMap \u2192 query inventory",
+    "func": "msg.zoneMap = {};\n(msg.payload||[]).forEach(r => { msg.zoneMap[r.source_id] = r.zone_key; });\nmsg.query = msg.payload = `\nSELECT\n  i.product_id, i.zone_id, i.quantity, i.min_threshold,\n  p.unit_price\nFROM inventory i\nJOIN products p ON p.id = i.product_id\nORDER BY i.product_id\n`;\nreturn msg;",
     "outputs": 1,
     "x": 360,
     "y": 220,
-    "wires": [["s-pg-inventory"]]
+    "wires": [
+      [
+        "s-pg-inventory"
+      ]
+    ]
   },
   {
     "id": "s-pg-inventory",
@@ -667,14 +877,18 @@
     "z": "tab-snapshot",
     "name": "PG: inventory",
     "query": "",
-    "postgresDB": "pg-config-001",
+    "postgreSQLConfig": "pg-config-001",
     "dynamic": false,
     "split": false,
     "rowsPerMsg": 0,
     "outputs": 1,
     "x": 620,
     "y": 220,
-    "wires": [["s-fn-build-snapshot"]]
+    "wires": [
+      [
+        "s-fn-build-snapshot"
+      ]
+    ]
   },
   {
     "id": "s-fn-build-snapshot",
@@ -685,7 +899,11 @@
     "outputs": 1,
     "x": 120,
     "y": 300,
-    "wires": [["s-ss-insert-snapshot"]]
+    "wires": [
+      [
+        "s-ss-insert-snapshot"
+      ]
+    ]
   },
   {
     "id": "s-ss-insert-snapshot",
@@ -699,7 +917,11 @@
     "throwErrors": 1,
     "x": 380,
     "y": 300,
-    "wires": [["s-debug-done"]]
+    "wires": [
+      [
+        "s-debug-done"
+      ]
+    ]
   },
   {
     "id": "s-debug-done",
@@ -727,7 +949,11 @@
     "uncaught": false,
     "x": 160,
     "y": 380,
-    "wires": [["s-debug-error"]]
+    "wires": [
+      [
+        "s-debug-error"
+      ]
+    ]
   },
   {
     "id": "s-debug-error",

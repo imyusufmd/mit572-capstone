@@ -22,7 +22,7 @@ cat > "$DATA_DIR/flows_cred.json" <<CREDEOF
     "password": "${POSTGRES_PASSWORD}"
   },
   "mssql-config-001": {
-    "user": "sa",
+    "username": "sa",
     "password": "${SA_PASSWORD}"
   }
 }
