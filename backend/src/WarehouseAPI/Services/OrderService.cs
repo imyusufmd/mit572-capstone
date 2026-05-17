@@ -118,9 +118,17 @@ public class OrderService : IOrderService
 
             case "Shipped":
                 order.ShippedAt = DateTime.UtcNow;
-                // Deduct stock
-                foreach (var item in order.Items.Where(i => i.ZoneId.HasValue))
-                    await _inventory.UpdateStockAsync(item.ProductId, item.ZoneId!.Value, -item.Quantity);
+                foreach (var item in order.Items)
+                {
+                    var zoneId = item.ZoneId;
+                    if (!zoneId.HasValue)
+                    {
+                        var inv = await _db.Inventory.FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+                        zoneId = inv?.ZoneId;
+                    }
+                    if (zoneId.HasValue)
+                        await _inventory.UpdateStockAsync(item.ProductId, zoneId.Value, -item.Quantity);
+                }
                 break;
 
             case "Delivered":
