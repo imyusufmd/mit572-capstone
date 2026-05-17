@@ -223,7 +223,6 @@ export default function ShipmentDetailPage() {
                     }
                     className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded text-sm text-gray-100 focus:outline-none focus:border-blue-500"
                   >
-                    <option value="">Default zone</option>
                     {zones.map((z) => (
                       <option key={z.id} value={z.id}>{z.name}</option>
                     ))}
