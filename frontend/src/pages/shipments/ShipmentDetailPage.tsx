@@ -43,7 +43,7 @@ export default function ShipmentDetailPage() {
     shipment.items.forEach((it) => {
       initial[it.id] = {
         receivedQty: String(it.expectedQty - it.receivedQty),
-        zoneId: it.zoneId ?? '',
+        zoneId: it.zoneId ?? zones[0]?.id ?? '',
       };
     });
     setReceiveItems(initial);
